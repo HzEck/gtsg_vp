@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: gtps-vp-bot
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: GTPS_SERVER_URL
+        value: https://api.gtps.cloud/g-api/18882
+      - key: VP_CHANNEL_ID
+        sync: false
+      - key: GEMS_CHANNEL_ID
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0
