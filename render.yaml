@@ -9,8 +9,6 @@ services:
     envVars:
       - key: DISCORD_TOKEN
         sync: false
-      - key: GTPS_SERVER_URL
-        value: https://api.gtps.cloud/g-api/18882
       - key: VP_CHANNEL_ID
         sync: false
       - key: GEMS_CHANNEL_ID
