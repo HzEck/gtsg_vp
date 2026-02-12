@@ -7,6 +7,7 @@ import asyncio
 import aiohttp
 from datetime import datetime, timedelta
 import logging
+from aiohttp import web
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s: %(message)s')
@@ -17,6 +18,7 @@ DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 GTPS_SERVER_URL = os.getenv('GTPS_SERVER_URL', 'http://localhost:8080')
 VP_CHANNEL_ID = int(os.getenv('VP_CHANNEL_ID', '0'))
 GEMS_CHANNEL_ID = int(os.getenv('GEMS_CHANNEL_ID', '0'))
+PORT = int(os.getenv('PORT', '10000'))  # Render provides PORT env var
 
 # VP earning rates
 VP_PER_MINUTE = 2  # 2 VP per minute in VP channel
@@ -564,11 +566,35 @@ async def help_command(interaction: discord.Interaction):
     embed.set_footer(text="Start with /link in-game to get your verification code!")
     await interaction.response.send_message(embed=embed)
 
-# Run bot
+# HTTP Server for Render (health check)
+async def health_check(request):
+    return web.Response(text='Bot is running!')
+
+async def start_http_server():
+    """Start HTTP server for Render"""
+    app = web.Application()
+    app.router.add_get('/', health_check)
+    app.router.add_get('/health', health_check)
+    
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', PORT)
+    await site.start()
+    logger.info(f"HTTP server started on port {PORT}")
+
+# Run bot and HTTP server
+async def main():
+    """Main async function"""
+    # Start HTTP server
+    await start_http_server()
+    
+    # Start Discord bot
+    async with bot:
+        await bot.start(DISCORD_TOKEN)
+
 if __name__ == "__main__":
     if not DISCORD_TOKEN:
         logger.error("DISCORD_TOKEN not set!")
         exit(1)
     
-    bot.run(DISCORD_TOKEN)
-
+    asyncio.run(main())
